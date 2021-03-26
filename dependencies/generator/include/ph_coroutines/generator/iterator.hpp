@@ -5,15 +5,15 @@ using namespace experimental;
 
 
 
-template <typename T>
-requires requires (typename T::promise_type p, T t) {
-    p.value;
-}
-struct generator_iter
+template <typename promise>
+//requires requires (typename T::promise_type p, T t) {
+//    p.value;
+//}
+struct gen_iterator
 {
     struct sentinel{};
     
-    using promise_type = typename T::promise_type;
+    using promise_type = promise;
     
 public:
     void operator++() {
@@ -25,7 +25,7 @@ public:
     bool operator==(sentinel) const {
         return !handle || handle.done();
     }
-    explicit generator_iter (coroutine_handle <promise_type> handle) : handle{handle} {}
+    explicit gen_iterator (coroutine_handle <promise_type> handle) : handle{handle} {}
 
 private:
     coroutine_handle <promise_type> handle;
