@@ -17,6 +17,8 @@ add_library (${self}
 
 add_library (ph::coroutines ALIAS ph_coroutines)
 target_link_libraries (${self} INTERFACE ph::coroutines::generator)
+target_include_directories (${self} INTERFACE ph::coroutines::generator)
+
 # target_link_libraries (${self} PRIVATE ${Boost_LIBRARIES})
 # target_include_directories (${self} PUBLIC ${PROJECT_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS})
 
