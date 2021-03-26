@@ -9,6 +9,7 @@ project (
 
 
 add_subdirectory (cmake/phake)
+add_subdirectory(dependencies/generator)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	
