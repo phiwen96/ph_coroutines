@@ -10,7 +10,7 @@ using namespace std::chrono_literals;
 
 //struct default_sentinel_t { };
 
-
+namespace ph{
 
 template <template <class...> class Generator, template <class...> class Iterator, class T>
 struct promise
@@ -54,3 +54,5 @@ struct promise
 //            cout << "deallocating heap for coroutine" << endl;
     }
 };
+
+}
