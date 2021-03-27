@@ -1,7 +1,6 @@
 #pragma once
 #include <experimental/coroutine>
 #include <concepts>
-//#include <ph_coroutines/coroutines.hpp>
 
 using namespace std;
 using namespace experimental;
@@ -13,13 +12,20 @@ using namespace std::chrono_literals;
 
 
 
-template <template <class...> class Generator, class T>
+template <template <class...> class Generator, template <class...> class Iterator, class T>
 struct promise
 {
     using value_type = T;
+    using iterator = Iterator <promise>;
     using generator = Generator <promise>;
     T value;
 
+    promise () {
+        cout << "promise()" << endl;
+    }
+    ~promise () {
+        cout << "~promise()" << endl;
+    }
     auto get_return_object () -> decltype (auto) {
         return generator {coroutine_handle<promise>::from_promise(*this)};
     }

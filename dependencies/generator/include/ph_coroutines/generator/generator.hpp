@@ -14,16 +14,17 @@ using namespace std::chrono_literals;
 template <class promise>
 struct generator
 {
+    
     using value_type = typename promise::value_type;
     
     using promise_type = promise;
     coroutine_handle <promise_type> handle;
     
     explicit generator (coroutine_handle <promise_type> h) : handle {h} {
-        
+        cout << "generator(handle)" << endl;
     }
     generator (generator&& other) : handle {exchange (other.handle, {})} {
-        
+        cout << "generator(other)" << endl;
     }
     generator& operator=(generator&& other) noexcept {
            if (this != &other) {
@@ -38,6 +39,7 @@ struct generator
            return *this;
        }
     ~generator () {
+        cout << "~generator()" << endl;
         // destroy the coroutine
         if (handle)
         {
@@ -78,7 +80,7 @@ struct generator
         return handle.promise().value;
     }
 
-    using iterator = gen_iterator<generator>;
+    using iterator = typename promise_type::iterator;
     
     auto begin() -> decltype (auto) {
         if (handle) {
