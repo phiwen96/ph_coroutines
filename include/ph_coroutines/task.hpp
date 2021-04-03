@@ -8,7 +8,7 @@ using namespace chrono_literals;
 
 
 
-template <typename T>
+template <typename T, bool multithreading = true>
 struct task {
     
     struct promise_type {
@@ -17,14 +17,20 @@ struct task {
         T m_value;
         
         auto get_return_object () {
-            return task <T> {*this};
+            return task {*this};
         }
         
         auto initial_suspend () {
-            thread {[&] () mutable {
-                resume();
-            }}.detach();
-            return suspend_always {};
+            if constexpr (multithreading) {
+                thread {[&] () mutable {
+                    resume();
+                }}.detach();
+                return suspend_always {};
+            } else {
+                return suspend_never {};
+            }
+            cout << "yo" << endl;
+            
         }
         
         auto final_suspend () noexcept {
@@ -72,7 +78,7 @@ struct task {
         
     };
     
-    auto operator co_await () {
+    auto operator co_await () & {
         
         struct awaitable {
             
@@ -86,6 +92,29 @@ struct task {
                 m_promise.m_continuation = continuation;
                 return true;
         //        return coroutine_handle<promise_type>::from_promise (m_promise);
+            }
+            
+            auto await_resume () -> decltype (auto) {
+                return m_promise.m_value;
+            }
+        };
+        
+        return awaitable {m_promise};
+    }
+    
+    auto operator co_await () && {
+        struct awaitable {
+            
+            promise_type& m_promise;
+            
+            bool await_ready () {
+                return true;
+            }
+            
+            auto await_suspend (coroutine_handle <> continuation) noexcept {
+                m_promise.m_continuation = continuation;
+                return true;
+//                return coroutine_handle<promise_type>::from_promise (m_promise);
             }
             
             auto await_resume () -> decltype (auto) {
