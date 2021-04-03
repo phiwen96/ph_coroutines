@@ -1,5 +1,6 @@
 #include <experimental/coroutine>
 #include <concepts>
+#include <ph_debug/debug.hpp>
 
 
 using namespace std;
@@ -7,12 +8,19 @@ using namespace experimental;
 using namespace chrono_literals;
 
 
+atomic<int> ccount {0};
 
-template <typename T, bool multithreading = true>
+template <typename T, bool _multithreading = true>
 struct task {
     
     struct promise_type {
-        
+        inline static constexpr bool multithreading = _multithreading;
+        bool parent_is_not_multithreading_so_join_thread = not multithreading;
+        promise_type (debug_called_from) : m_called_from {_called_from_function} {
+            
+        }
+        string m_called_from;
+        int m_ccount = ccount++;
         coroutine_handle <> m_continuation;
         T m_value;
         
@@ -21,15 +29,33 @@ struct task {
         }
         
         auto initial_suspend () {
-            if constexpr (multithreading) {
-                thread {[&] () mutable {
-                    resume();
-                }}.detach();
-                return suspend_always {};
-            } else {
-                return suspend_never {};
-            }
-            cout << "yo" << endl;
+//            cout << "initial_suspend::" << m_called_from << endl;
+            struct awaitable {
+                promise_type& m_promise;
+                bool await_ready() const noexcept {
+                    if constexpr (multithreading)
+                    {
+                        return false;
+                        
+                    } else
+                    {
+                        return true;
+                    }
+                }
+                constexpr void await_suspend(coroutine_handle<> me) const noexcept {
+                    thread {[&] () mutable {
+                        m_promise.resume();
+                    }}.detach();
+                }
+                constexpr void await_resume() const noexcept {}
+            };
+           
+            return awaitable {*this};
+//            thread {[&] () mutable {
+//                resume();
+//            }}.detach();
+//            return suspend_always {};
+
             
         }
         
@@ -53,6 +79,8 @@ struct task {
                     
                 }
             };
+//            cout << "final_suspend::" << m_called_from << endl;
+
             return awaitable {};
         }
         
@@ -78,52 +106,33 @@ struct task {
         
     };
     
-    auto operator co_await () & {
-        
-        struct awaitable {
-            
-            promise_type& m_promise;
-            
-            bool await_ready () {
-                return m_promise.done();
-            }
-            
-            auto await_suspend (coroutine_handle <> continuation) noexcept {
-                m_promise.m_continuation = continuation;
-                return true;
-        //        return coroutine_handle<promise_type>::from_promise (m_promise);
-            }
-            
-            auto await_resume () -> decltype (auto) {
-                return m_promise.m_value;
-            }
-        };
-        
-        return awaitable {m_promise};
+    bool await_ready () {
+        return m_promise.done();
     }
     
-    auto operator co_await () && {
-        struct awaitable {
-            
-            promise_type& m_promise;
-            
-            bool await_ready () {
-                return true;
-            }
-            
-            auto await_suspend (coroutine_handle <> continuation) noexcept {
-                m_promise.m_continuation = continuation;
-                return true;
-//                return coroutine_handle<promise_type>::from_promise (m_promise);
-            }
-            
-            auto await_resume () -> decltype (auto) {
-                return m_promise.m_value;
-            }
-        };
-        
-        return awaitable {m_promise};
+    template <typename U>
+    auto await_suspend (coroutine_handle <U> continuation) noexcept {
+        m_promise.m_continuation = continuation;
+
+//        cout << "me::" << m_promise.m_called_from << endl;
+//        cout << "continuation::" << continuation.promise().m_called_from << endl;
+//        if constexpr (not U::multithreading) {
+//            m_promise.parent_is_not_multithreading_so_join_thread = true;
+////            cout << continuation.promise().m_called_from << " is not multithreading!" << endl;
+//            return false;
+//        } else if (continuation.promise().parent_is_not_multithreading_so_join_thread) {
+//            m_promise.parent_is_not_multithreading_so_join_thread = true;
+//            return false;
+//        }
+        return true;
+//        return coroutine_handle<promise_type>::from_promise (m_promise);
     }
+    
+    auto await_resume () -> decltype (auto) {
+        return m_promise.m_value;
+    }
+    
+  
     
     
     promise_type& m_promise;
