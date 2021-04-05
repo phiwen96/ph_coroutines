@@ -35,26 +35,30 @@ struct task {
                 bool await_ready() const noexcept {
                     if constexpr (multithreading)
                     {
-                        return false;
+                        cout << m_promise.m_called_from << " oja" << endl;
+//                        return false;
                         
                     } else
                     {
-                        return true;
+                        cout << m_promise.m_called_from << " onej" << endl;
+
+//                        return true;
                     }
+                    return false;
                 }
-                constexpr void await_suspend(coroutine_handle<> me) const noexcept {
+                constexpr void await_suspend(coroutine_handle<>) const noexcept {
                     thread {[&] () mutable {
                         m_promise.resume();
-                    }}.detach();
+                    }}.join();
                 }
                 constexpr void await_resume() const noexcept {}
             };
            
-            return awaitable {*this};
-//            thread {[&] () mutable {
-//                resume();
-//            }}.detach();
-//            return suspend_always {};
+//            return awaitable {*this};
+            thread {[&] () mutable {
+                resume();
+            }}.detach();
+            return suspend_always {};
 
             
         }
@@ -124,7 +128,7 @@ struct task {
 //            m_promise.parent_is_not_multithreading_so_join_thread = true;
 //            return false;
 //        }
-        return true;
+//        return true;
 //        return coroutine_handle<promise_type>::from_promise (m_promise);
     }
     
