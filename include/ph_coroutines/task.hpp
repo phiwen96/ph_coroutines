@@ -9,10 +9,6 @@ using namespace experimental;
 using namespace chrono_literals;
 
 
-atomic<int> ccount {0};
-
-static inline vector <thread> threadss;
-
 template <typename T>
 struct task {
     
@@ -22,14 +18,12 @@ struct task {
             m_called_from += _called_from_function;
             m_called_from += "::";
             m_called_from += to_string (_called_from_line);
-//            debug_class_print_called_from(green, 0)
         }
         friend ostream& operator<< (ostream& os, promise_type const& p) {
             os << cyan << p.m_called_from << white;
             return os;
         }
         string m_called_from;
-        int m_ccount = ccount++;
         coroutine_handle <> m_continuation;
         T m_value;
         
