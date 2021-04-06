@@ -1,3 +1,4 @@
+#pragma once
 #include <experimental/coroutine>
 #include <concepts>
 #include <ph_debug/debug.hpp>
@@ -27,7 +28,7 @@ struct task
             m_called_from += "::";
             m_called_from += to_string (_called_from_line);
         }
-        
+    
         friend auto operator<< (ostream& os, promise_type const& p) -> ostream&
         {
             os << cyan << p.m_called_from << white;
@@ -56,7 +57,8 @@ struct task
                 constexpr auto await_suspend (coroutine_handle <void>) const noexcept -> bool
                 {
                     thread {[&] () mutable {
-                        m_promise.resume();
+//                        m_promise.resume();
+                        coroutine_handle<promise_type>::from_promise (m_promise).resume();
                     }}.detach();
 
                     return true;
@@ -111,20 +113,6 @@ struct task
         {
             throw runtime_error ("oops");
         }
-        
-        auto done () -> bool
-        {
-            return coroutine_handle<promise_type>::from_promise(*this).done();
-        }
-        
-        auto resume () -> bool
-        {
-            if (not coroutine_handle<promise_type>::from_promise(*this).done())
-                coroutine_handle<promise_type>::from_promise(*this).resume();
-            
-            return not coroutine_handle<promise_type>::from_promise(*this).done();
-        }
-        
     };
     
     auto operator co_await () const& -> decltype (auto)
@@ -135,7 +123,7 @@ struct task
             
             constexpr auto await_ready () noexcept -> bool
             {
-                return m_promise.done();
+                return coroutine_handle <promise_type>::from_promise (m_promise).done ();
             }
             
             constexpr auto await_suspend (coroutine_handle <void> continuation) noexcept -> bool
@@ -164,7 +152,7 @@ struct task
     
     auto wait () -> void
     {
-        while (not m_promise.done())
+        while (not coroutine_handle <promise_type>::from_promise (m_promise).done ())
         {
             
         }
@@ -173,6 +161,14 @@ struct task
     task (task const&) = delete;
     task (promise_type& promise) : m_promise {promise} {}
     task (task&& o) : m_promise {o.m_promise} {}
+    ~task () {
+        if (decltype (auto) coro = coroutine_handle <promise_type>::from_promise (m_promise);
+            coro)
+        {
+            coro.destroy ();
+            cout << "OK!" << endl;
+        }
+    }
     task& operator=(task&&) = delete;
     task& operator=(task const&) = delete;
 };
