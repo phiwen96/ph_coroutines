@@ -14,9 +14,9 @@ add_library (${self}
 
 
 ph_precompile (TARGET ${self} PRIVATE PCH ${std_pch} ${boost_pch})
-target_link_libraries (${self} PRIVATE ph::debug ph::color)
+target_link_libraries (${self} PRIVATE ph::debug ph::color ph::concepts)
 add_library (ph::coroutines ALIAS ph_coroutines)
-target_link_libraries (${self} INTERFACE ph::debug ph::coroutines::generator)
+target_link_libraries (${self} INTERFACE ph::debug ph::concepts ph::coroutines::generator)
 target_include_directories (${self} INTERFACE ph::coroutines::generator)
 
 target_link_libraries (${self} PRIVATE ${Boost_LIBRARIES})

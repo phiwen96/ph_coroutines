@@ -29,7 +29,7 @@ struct i_was_co_awaited_and_now_i_am_suspending
     template <typename promise_type>
     auto await_suspend (coroutine_handle <promise_type> my_handle) noexcept -> coroutine_handle <>
     {
-        auto& parent = my_handle.promise().m_parent;
+        auto& parent = my_handle.promise().m_this_function_co_awaited_me;
         return parent ? parent : noop_coroutine ();
     }
     

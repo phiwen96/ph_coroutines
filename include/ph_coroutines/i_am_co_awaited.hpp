@@ -25,9 +25,10 @@ using namespace chrono_literals;
         Someone co_awaits us. So, lets save a handle to it and then
         begin execution of our self. 
  */
-template <typename my_function_handle>
+template <typename promise_type>
 struct i_am_co_awaited
 {
+    using my_function_handle = coroutine_handle <promise_type>;
     my_function_handle m_handle;
     
     
@@ -43,7 +44,7 @@ struct i_am_co_awaited
      */
     auto await_ready (d0) -> bool
     {
-        d1 (yellow, 0, "my function name: " + m_handle.promise().m_function_name)
+//        d1 (yellow, 0, "my function name: " + m_handle.promise().m_function_name)
 //        return not m_handle.done();
         return false;
     }
@@ -65,7 +66,7 @@ struct i_am_co_awaited
      */
     auto await_suspend (coroutine_handle <> this_function_co_awaited_me) -> decltype (auto)
     {
-        m_handle.promise().m_parent = this_function_co_awaited_me;
+        m_handle.promise().m_this_function_co_awaited_me = this_function_co_awaited_me;
         return m_handle;
     }
     
@@ -79,7 +80,7 @@ struct i_am_co_awaited
      */
     auto await_resume ()
     {
-        
+        return m_handle.promise().m_value;
         // return coro_ . promise () . value_ ;
     }
 };

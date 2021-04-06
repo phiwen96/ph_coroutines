@@ -15,6 +15,9 @@ endif ()
 if (NOT TARGET ph_debug)
 	add_subdirectory (dependencies/ph_debug)
 endif ()
+if (NOT TARGET ph_concepts)
+	add_subdirectory (dependencies/ph_concepts)
+endif ()
 
 
 find_package (Boost 1.74 REQUIRED)
