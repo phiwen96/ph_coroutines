@@ -4,6 +4,7 @@
 #include <ph_debug/debug.hpp>
 #include <vector>
 #include <thread>
+#include <ph_concepts/concepts.hpp>
 
 using namespace std;
 using namespace experimental;
@@ -26,10 +27,14 @@ using namespace chrono_literals;
         begin execution of our self. 
  */
 template <typename promise_type>
+requires requires (promise_type p) {
+    typename promise_type::value_type;
+    p.m_value;
+}
 struct i_am_co_awaited
 {
-    using my_function_handle = coroutine_handle <promise_type>;
-    my_function_handle m_handle;
+//    using promise_type = typename interface_type::promise_type;
+    coroutine_handle <promise_type> m_function_handle;
     
     
     /**
@@ -42,7 +47,7 @@ struct i_am_co_awaited
      
      @return bool, Whether we are ready for execution!
      */
-    auto await_ready (d0) -> bool
+    auto await_ready () -> bool
     {
 //        d1 (yellow, 0, "my function name: " + m_handle.promise().m_function_name)
 //        return not m_handle.done();
@@ -64,10 +69,10 @@ struct i_am_co_awaited
 
      @return a function execution, the function that should begin/continue execution!
      */
-    auto await_suspend (coroutine_handle <> this_function_co_awaited_me) -> decltype (auto)
+    auto await_suspend (coroutine_handle <> this_function_co_awaited_me) -> decltype (auto)//coroutine_handle <promise_type>
     {
-        m_handle.promise().m_this_function_co_awaited_me = this_function_co_awaited_me;
-        return m_handle;
+        m_function_handle.promise() = this_function_co_awaited_me;
+        return m_function_handle;
     }
     
     
@@ -78,9 +83,9 @@ struct i_am_co_awaited
      @brief What to do before resuming the function that co_await'ed us!
             (AKA parent coro).
      */
-    auto await_resume ()
+    auto await_resume () -> decltype (auto)//typename promise_type::value_type
     {
-        return m_handle.promise().m_value;
+        return m_function_handle.promise().m_value;
         // return coro_ . promise () . value_ ;
     }
 };

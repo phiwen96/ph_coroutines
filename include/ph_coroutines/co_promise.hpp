@@ -22,35 +22,37 @@ using namespace chrono_literals;
 //
 //};
 
-template <
-    typename interface_type_
->
+//ph::concepts::coroutines::interface_type
+
+template <typename interface_type_>
 struct co_promise
 {
+    using promise_type = co_promise;
     using interface_type = interface_type_;
     using value_type = typename interface_type::value_type;
-    using promise_type = co_promise;
-    
-    struct awaitable
-    {
-        using initial_type =  typename interface_type::awaitable::initial_type;
-        using final_type = typename interface_type::awaitable::final_type;
-        using transform_type = typename interface_type::awaitable::transform_type;
-    };
+
+
 
     value_type m_value;
+    
     
     auto get_return_object () noexcept -> decltype (auto)
     {
         return interface_type {coroutine_handle <promise_type>::from_promise(*this)};
     }
     auto initial_suspend () noexcept -> decltype (auto)
+    requires requires (){
+        ph::concepts::coroutines::awaitables::initial_type <typename interface_type::initial_suspend_awaitable_type>;
+    }
     {
-        return typename awaitable::initial_type {};
+        return typename interface_type::initial_suspend_awaitable_type {};
     }
     auto final_suspend () noexcept -> decltype (auto)
+    requires requires (){
+        ph::concepts::coroutines::awaitables::final_type <typename interface_type::final_suspend_awaitable_type>;
+    }
     {
-        return typename awaitable::final_type {};
+        return typename interface_type::final_suspend_awaitable_type {};
     }
     [[noreturn]] auto unhandled_exception () -> decltype (auto)
     {
@@ -70,24 +72,41 @@ struct co_promise
      
         When we are (in our own coro-function) co_awaiting another function!
      */
-    auto await_transform (interface_type && i_co_awaited_this_function) -> decltype (auto)
-    {
-        return typename awaitable::transform_type {move (i_co_awaited_this_function.m_coro)};
-    }
+//    auto await_transform (interface_type && i_co_awaited_this_function) -> decltype (auto)
+//    requires requires () {
+//        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
+//    }
+//    {
+//        return typename interface_type::await_transform_awaitable_type {move (i_co_awaited_this_function.m_coro)};
+//    }
     
     /**
      i am co_awaiting another function!
      
         When we are (in our own coro-function) co_awaiting another function!
      */
-    auto await_transform (interface_type const& i_co_awaited_this_function) -> decltype (auto)
+    auto await_transform (interface_type const& i_co_awaited_this_function) -> decltype (auto)//typename interface_type::await_transform_awaitable_type//decltype (auto)
+//    requires requires () {
+//        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
+//    }
     {
-        return typename awaitable::transform_type {i_co_awaited_this_function.m_coro};
+        return typename interface_type::await_transform_awaitable_type {i_co_awaited_this_function.m_coro};
     }
     
     coroutine_handle <> m_this_function_co_awaited_me;
     
-    static_assert (ph::concepts::coroutines::promise_type<co_promise>, "this does not follow promise_type conventionals!");
+    operator coroutine_handle <> () const&
+    {
+        return m_this_function_co_awaited_me;
+    }
+    
+    promise_type& operator= (coroutine_handle <> const& parent)
+    {
+        m_this_function_co_awaited_me = parent;
+        return *this;
+    }
+    
+//    static_assert (ph::concepts::coroutines::promise_type<co_promise>, "this does not follow promise_type conventionals!");
 };
 
 
