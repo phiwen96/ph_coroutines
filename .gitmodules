@@ -7,3 +7,6 @@
 [submodule "dependencies/ph_debug"]
 	path = dependencies/ph_debug
 	url = https://github.com/phiwen96/ph_debug
+[submodule "dependencies/ph_concepts"]
+	path = dependencies/ph_concepts
+	url = https://github.com/phiwen96/ph_concepts
