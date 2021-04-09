@@ -34,9 +34,14 @@ struct co_promise
     value_type m_value;
     
     
+//    auto get_return_object () noexcept -> interface_type
+//    {
+//        return {coroutine_handle <promise_type>::from_promise(*this)};
+//    }
+    
     auto get_return_object () noexcept -> interface_type
     {
-        return {coroutine_handle <promise_type>::from_promise(*this)};
+        return {static_cast <typename interface_type::promise_type&> (*this)};
     }
     
     auto initial_suspend () noexcept -> typename interface_type::initial_suspend_awaitable_type
@@ -47,13 +52,13 @@ struct co_promise
         return {};
     }
     
-    auto final_suspend () noexcept -> typename interface_type::final_suspend_awaitable_type
-    requires requires (){
-        ph::concepts::coroutines::awaitables::final_type <typename interface_type::final_suspend_awaitable_type>;
-    }
-    {
-        return {};
-    }
+//    auto final_suspend () noexcept -> typename interface_type::final_suspend_awaitable_type
+//    requires requires (){
+//        ph::concepts::coroutines::awaitables::final_type <typename interface_type::final_suspend_awaitable_type>;
+//    }
+//    {
+//        return {};
+//    }
     
     [[noreturn]] auto unhandled_exception () -> void
     {
@@ -73,26 +78,26 @@ struct co_promise
      
         When we are (in our own coro-function) co_awaiting another function!
      */
-    auto await_transform (interface_type && the_function_i_co_awaited) -> typename interface_type::await_transform_awaitable_type
-    requires requires () {
-        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
-    }
-    {
-        return {move (the_function_i_co_awaited.m_coro)};
-    }
+//    auto await_transform (interface_type && the_function_i_co_awaited) -> typename interface_type::await_transform_awaitable_type
+//    requires requires () {
+//        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
+//    }
+//    {
+//        return {move (the_function_i_co_awaited.m_coro)};
+//    }
     
     /**
      i am co_awaiting another function!
      
         When we are (in our own coro-function) co_awaiting another function!
      */
-    auto await_transform (interface_type const& the_function_i_co_awaited) -> typename interface_type::await_transform_awaitable_type
-    requires requires () {
-        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
-    }
-    {
-        return {the_function_i_co_awaited.m_coro};
-    }
+//    auto await_transform (interface_type const& the_function_i_co_awaited) -> typename interface_type::await_transform_awaitable_type
+//    requires requires () {
+//        ph::concepts::coroutines::awaitables::transform_type <typename interface_type::await_transform_awaitable_type>;
+//    }
+//    {
+//        return {the_function_i_co_awaited.m_coro};
+//    }
 
     operator value_type ()
     {
@@ -107,6 +112,11 @@ struct co_promise
     operator coroutine_handle <> & ()
     {
         return m_this_function_co_awaited_me;
+    }
+    
+    operator coroutine_handle <promise_type> ()
+    {
+        return coroutine_handle <promise_type>::from_promise (*this);
     }
     
     coroutine_handle <> m_this_function_co_awaited_me;
