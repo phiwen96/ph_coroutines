@@ -21,17 +21,17 @@ using namespace chrono_literals;
 template <typename interface_type_>
 requires requires ()
 {
-    typename interface_type_::value_type;
+    typename interface_type_::return_type;
 }
 struct co_promise
 {
     using promise_type = co_promise;
     using interface_type = interface_type_;
-    using value_type = typename interface_type::value_type;
+    using return_type = typename interface_type::return_type;
    
     
 
-    value_type m_value;
+    return_type m_return_value;
     
     
 //    auto get_return_object () noexcept -> interface_type
@@ -68,9 +68,9 @@ struct co_promise
     /**
      co_return value;
      */
-    [[nodiscard]] auto return_value (auto&& value) noexcept  -> decltype (auto)
+    auto return_value (auto&& value) noexcept  -> decltype (auto)
     {
-        m_value = forward <decltype (value)> (value);
+        m_return_value = forward <decltype (value)> (value);
     }
     
     /**
@@ -99,14 +99,14 @@ struct co_promise
 //        return {the_function_i_co_awaited.m_coro};
 //    }
 
-    operator value_type ()
+    operator return_type ()
     {
-        return m_value;
+        return m_return_value;
     }
     
     auto value () -> promise_type
     {
-        return m_value;
+        return m_return_value;
     }
 
     operator coroutine_handle <> & ()
