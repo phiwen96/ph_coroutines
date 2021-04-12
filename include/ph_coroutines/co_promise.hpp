@@ -62,7 +62,8 @@ struct co_promise
     
     [[noreturn]] auto unhandled_exception () -> void
     {
-        throw runtime_error ("oops");
+//        throw runtime_error ("oops");
+        terminate ();
     }
     
     /**
@@ -70,6 +71,8 @@ struct co_promise
      */
     auto return_value (auto&& value) noexcept  -> decltype (auto)
     {
+        
+        cout << "momom" << endl;
         m_return_value = forward <decltype (value)> (value);
     }
     
