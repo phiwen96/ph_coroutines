@@ -22,7 +22,7 @@ endif ()
 
 
 find_package (Boost 1.74 REQUIRED)
-add_subdirectory(dependencies/generator)
+# add_subdirectory(dependencies/generator)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	
