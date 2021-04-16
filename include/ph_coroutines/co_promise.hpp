@@ -69,11 +69,12 @@ struct co_promise
     /**
      co_return value;
      */
-    auto return_value (auto&& value) noexcept  -> decltype (auto)
+    auto return_value (auto&& value) noexcept  -> auto
     {
         
         cout << "momom" << endl;
         m_return_value = forward <decltype (value)> (value);
+//        m_return_value = value;
     }
     
     /**
